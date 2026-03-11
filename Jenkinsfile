@@ -6,14 +6,14 @@ node {
             sh '''
             cd src
             rm -f composer.lock
-            composer install --ignore-platform-reqs
+            composer install --ignore-platform-reqs --no-scripts
             '''
         }
     }
 
     stage("Testing") {
         docker.image('ubuntu').inside('-u root') {
-            sh 'echo "Pipeline testing berhasil"'
+            sh 'echo "Pipeline testing berhasil 🚀"'
         }
     }
 }
