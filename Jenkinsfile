@@ -3,8 +3,8 @@ node {
     // deploy env dev
     stage("Build"){
         docker.image('shippingdocker/php-composer:7.4').inside('-u root') {
-            sh 'rm -f composer.lock'
-            sh 'composer install'
+            sh 'cd src && rm -f composer.lock'
+            sh 'cd src && composer install'
         }
     }
     // Testing
