@@ -1,20 +1,14 @@
 node {
-
-    stage('Checkout') {
-        checkout scm
-    }
-
-    stage('Build') {
+    checkout scm
+    // deploy env dev
+    stage("Build"){
         docker.image('shippingdocker/php-composer:7.4').inside('-u root') {
-            sh 'rm -f composer.lock'
+            sh 'rm composer.lock'
             sh 'composer install'
         }
     }
-
-    stage('Testing') {
-        docker.image('ubuntu').inside('-u root') {
-            sh 'echo "Ini adalah test pipeline Laravel DevOps"'
-        }
+    // Testing
+    docker.image('ubuntu').inside('-u root') {
+       sh 'echo "Ini adalah test"'
     }
-
 }
