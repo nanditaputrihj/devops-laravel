@@ -1,19 +1,20 @@
-pipeline {
-    agent any
+node {
 
-    stages {
-
-        stage('Clone Repo') {
-            steps {
-                git 'https://github.com/nanditaputrihj/devops-laravel.git'
-            }
-        }
-
-        stage('Build Docker') {
-            steps {
-                sh 'docker build -t laravel-app .'
-            }
-        }
-
+    stage('Checkout') {
+        checkout scm
     }
+
+    stage('Build') {
+        docker.image('shippingdocker/php-composer:7.4').inside('-u root') {
+            sh 'rm -f composer.lock'
+            sh 'composer install'
+        }
+    }
+
+    stage('Testing') {
+        docker.image('ubuntu').inside('-u root') {
+            sh 'echo "Ini adalah test pipeline Laravel DevOps"'
+        }
+    }
+
 }
