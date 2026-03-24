@@ -3,13 +3,13 @@ pipeline {
 
     stages {
 
-        stage('Clone Repository') {
+        stage('Clone Repo') {
             steps {
-                checkout scm
+                git 'https://github.com/nanditaputrihj/devops-laravel.git'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Docker') {
             steps {
                 sh 'docker build -t laravel-app .'
             }
