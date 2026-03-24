@@ -1,0 +1,8 @@
+---
+- name: Setup Development and Production Hosts
+  hosts: all
+
+  tasks:
+    - name: Test connection
+      ping:
+
