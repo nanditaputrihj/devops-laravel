@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         COMPOSER_HOME = "${WORKSPACE}/.composer"
-        SSH_KEY_PATH = "/root/.ssh/id_rsa"
     }
 
     stages {
@@ -11,13 +10,9 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        # Pastikan ssh-agent jalan
-                        eval $(ssh-agent -s)
-                        ssh-add ${SSH_KEY_PATH}
-
-                        # Clone repo jika belum ada, kalau sudah ada fetch update
+                        # Clone atau update repo
                         if [ ! -d src ]; then
-                            git clone -b main git@github.com:nanditaputrihj/devops-laravel.git src
+                            git clone -b main git@github.com:nanditaprihj/devops-laravel.git src
                         else
                             cd src
                             git fetch origin
@@ -50,18 +45,19 @@ pipeline {
 
         stage('Deploy to Debian') {
             steps {
-                script {
-                    sh """
-                        ssh -i ${SSH_KEY_PATH} -o StrictHostKeyChecking=no nandita@192.168.100.10 << 'EOF'
+                // Gunakan SSH Credentials dari Jenkins (ID: jenkins-ssh-key)
+                sshagent(['jenkins-ssh-key']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no nandita@192.168.100.10 << 'EOF'
                             cd /home/nandita/prod.kelasdevops.xyz
                             mkdir -p prod
                             rm -rf prod/*
-                            cp -r src/* prod/
+                            cp -r ${WORKSPACE}/src/* prod/
                             cd prod
                             composer install --no-dev --optimize-autoloader
                             php artisan migrate --force
                         EOF
-                    """
+                    '''
                 }
             }
         }
