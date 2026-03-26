@@ -10,7 +10,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        # Clone atau update repo
+                        # Jika folder src belum ada, clone repo
                         if [ ! -d src ]; then
                             git clone -b main git@github.com:nanditaprihj/devops-laravel.git src
                         else
@@ -18,6 +18,9 @@ pipeline {
                             git fetch origin
                             git reset --hard origin/main
                         fi
+
+                        # Atasi error "dubious ownership" di Git
+                        git config --global --add safe.directory ${WORKSPACE}/src
                     '''
                 }
             }
@@ -26,7 +29,8 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    docker.image('composer:2').inside {
+                    // Gunakan Docker composer untuk install dependencies
+                    docker.image('composer:2').inside('--entrypoint=""') {
                         sh '''
                             cd src
                             composer install --no-dev --optimize-autoloader
@@ -47,8 +51,8 @@ pipeline {
             steps {
                 // Gunakan SSH Credentials dari Jenkins (ID: jenkins-ssh-key)
                 sshagent(['jenkins-ssh-key']) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no nandita@192.168.100.10 << 'EOF'
+                    sh """
+                        ssh -o StrictHostKeyChecking=no nandita@192.168.100.10 << EOF
                             cd /home/nandita/prod.kelasdevops.xyz
                             mkdir -p prod
                             rm -rf prod/*
@@ -57,7 +61,7 @@ pipeline {
                             composer install --no-dev --optimize-autoloader
                             php artisan migrate --force
                         EOF
-                    '''
+                    """
                 }
             }
         }
