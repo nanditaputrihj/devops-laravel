@@ -2,8 +2,9 @@ node {
     checkout scm
 
     stage("Build") {
-        docker.image('composer:2').inside('-u root') {
+        docker.image('composer:2').inside('-u root --entrypoint=""') {
             sh '''
+            git config --global --add safe.directory /var/jenkins_home/workspace/laravel-dev
             cd src
             composer install
             '''
@@ -21,8 +22,12 @@ node {
             sshagent (credentials: ['ssh-prod']) {
                 sh '''
                 mkdir -p ~/.ssh
-                ssh-keyscan -H "$PROD_HOST" >> ~/.ssh/known_hosts
+                ssh-keyscan -H $PROD_HOST >> ~/.ssh/known_hosts
 
+                echo "TEST SSH CONNECTION..."
+                ssh -o StrictHostKeyChecking=no ubuntu@$PROD_HOST "echo CONNECTED"
+
+                echo "START RSYNC..."
                 rsync -rav --delete ./src/ \
                 ubuntu@$PROD_HOST:/home/ubuntu/prod.kelasdevops.xyz/ \
                 --exclude=.env \
