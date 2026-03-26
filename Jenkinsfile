@@ -3,17 +3,28 @@ pipeline {
 
     environment {
         COMPOSER_HOME = "${WORKSPACE}/.composer"
+        SSH_KEY_PATH = "/root/.ssh/id_rsa"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout([$class: 'GitSCM',
-                    branches: [[name: 'main']],
-                    userRemoteConfigs: [[
-                        url: 'git@github.com:nanditaputrihj/devops-laravel.git'
-                    ]]
-                ])
+                script {
+                    sh '''
+                        # Pastikan ssh-agent jalan
+                        eval $(ssh-agent -s)
+                        ssh-add ${SSH_KEY_PATH}
+
+                        # Clone repo jika belum ada, kalau sudah ada fetch update
+                        if [ ! -d src ]; then
+                            git clone -b main git@github.com:nanditaputrihj/devops-laravel.git src
+                        else
+                            cd src
+                            git fetch origin
+                            git reset --hard origin/main
+                        fi
+                    '''
+                }
             }
         }
 
@@ -40,9 +51,8 @@ pipeline {
         stage('Deploy to Debian') {
             steps {
                 script {
-                    // Deploy pakai SSH key yang ada di /root/.ssh/id_rsa
-                    sh '''
-                        ssh -i /root/.ssh/id_rsa -o StrictHostKeyChecking=no nandita@192.168.100.10 << 'EOF'
+                    sh """
+                        ssh -i ${SSH_KEY_PATH} -o StrictHostKeyChecking=no nandita@192.168.100.10 << 'EOF'
                             cd /home/nandita/prod.kelasdevops.xyz
                             mkdir -p prod
                             rm -rf prod/*
@@ -51,7 +61,7 @@ pipeline {
                             composer install --no-dev --optimize-autoloader
                             php artisan migrate --force
                         EOF
-                    '''
+                    """
                 }
             }
         }
