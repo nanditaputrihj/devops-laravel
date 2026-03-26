@@ -6,7 +6,7 @@ node {
             sh '''
             git config --global --add safe.directory /var/jenkins_home/workspace/laravel-dev
             cd src
-            composer install
+            composer install --no-dev --optimize-autoloader
             '''
         }
     }
@@ -17,10 +17,21 @@ node {
         }
     }
 
-    stage("Deploy Local") {
+    stage("Deploy to Debian") {
         sh '''
-        mkdir -p /home/nandita/prod.kelasdevops.xyz
-        cp -r src/* /home/nandita/prod.kelasdevops.xyz/
+        ssh nandita@192.168.100.10 "
+            cd /home/nandita/prod.kelasdevops.xyz &&
+
+            mkdir -p prod &&
+            rm -rf prod/* &&
+
+            cp -r src/* prod/ &&
+
+            cd prod &&
+
+            composer install --no-dev --optimize-autoloader &&
+            php artisan migrate --force
+        "
         '''
     }
 }
