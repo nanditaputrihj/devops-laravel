@@ -17,24 +17,10 @@ node {
         }
     }
 
-    stage("Deploy to Production") {
-        docker.image('agung3wi/alpine-rsync:1.1').inside('-u root') {
-            sshagent (credentials: ['ssh-prod']) {
-                sh '''
-                mkdir -p ~/.ssh
-                ssh-keyscan -H $PROD_HOST >> ~/.ssh/known_hosts
-
-                echo "TEST SSH CONNECTION..."
-                ssh -o StrictHostKeyChecking=no ubuntu@$PROD_HOST "echo CONNECTED"
-
-                echo "START RSYNC..."
-                rsync -rav --delete ./src/ \
-                ubuntu@$PROD_HOST:/home/ubuntu/prod.kelasdevops.xyz/ \
-                --exclude=.env \
-                --exclude=storage \
-                --exclude=.git
-                '''
-            }
-        }
+    stage("Deploy Local") {
+        sh '''
+        mkdir -p /home/nandita/prod.kelasdevops.xyz
+        cp -r src/* /home/nandita/prod.kelasdevops.xyz/
+        '''
     }
 }
