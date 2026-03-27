@@ -51,22 +51,22 @@ pipeline {
         }
 
         stage('Deploy to Debian') {
-            steps {
-                // Gunakan SSH Credentials dari Jenkins untuk server deploy
-                sshagent(['jenkins-ssh-key']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no nandita@192.168.100.10 << EOF
-                            cd /home/nandita/prod.kelasdevops.xyz
-                            mkdir -p prod
-                            rm -rf prod/*
-                            cp -r ${WORKSPACE}/src/* prod/
-                            cd prod
-                            composer install --no-dev --optimize-autoloader
-                            php artisan migrate --force
-                        EOF
-                    """
-                }
-            }
+    steps {
+        sshagent(['jenkins-ssh-key']) {
+            sh """
+                # Buat folder di server (kalau belum ada)
+                ssh -o StrictHostKeyChecking=no nandita@192.168.100.10 "mkdir -p /home/nandita/prod.kelasdevops.xyz/prod"
+
+                # Copy file dari Jenkins ke server
+                scp -o StrictHostKeyChecking=no -r ${WORKSPACE}/src/* nandita@192.168.100.10:/home/nandita/prod.kelasdevops.xyz/prod/
+
+                # Jalankan command di server
+                ssh -o StrictHostKeyChecking=no nandita@192.168.100.10 << EOF
+                    cd /home/nandita/prod.kelasdevops.xyz/prod
+                    composer install --no-dev --optimize-autoloader
+                    php artisan migrate --force
+                EOF
+            """
         }
     }
 }
