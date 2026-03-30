@@ -46,25 +46,26 @@ pipeline {
         }
 
         stage('Deploy to Debian') {
-    steps {
-        sshagent(['jenkins-ssh-key']) {
-            sh """
-                ssh -o StrictHostKeyChecking=no nandita@192.168.100.10 "mkdir -p /home/nandita/prod.kelasdevops.xyz/prod"
+            steps {
+                sshagent(['jenkins-ssh-key']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no nandita@192.168.100.10 "mkdir -p /home/nandita/prod.kelasdevops.xyz/prod"
 
-                scp -o StrictHostKeyChecking=no -r ${WORKSPACE}/src/* nandita@192.168.100.10:/home/nandita/prod.kelasdevops.xyz/prod/
+                        scp -o StrictHostKeyChecking=no -r ${WORKSPACE}/src/* nandita@192.168.100.10:/home/nandita/prod.kelasdevops.xyz/prod/
 
-                ssh -o StrictHostKeyChecking=no nandita@192.168.100.10 '
-                    cd /home/nandita/prod.kelasdevops.xyz/prod
+                        ssh -o StrictHostKeyChecking=no nandita@192.168.100.10 '
+                            cd /home/nandita/prod.kelasdevops.xyz/prod
 
-                    composer install --no-dev --optimize-autoloader
-                    php artisan migrate --force
+                            composer install --no-dev --optimize-autoloader
+                            php artisan migrate --force
 
-                    # 🔥 FIX PERMISSION WAJIB
-                    chown -R nandita:www-data .
-                    chmod -R 775 storage bootstrap/cache database
-                    chmod 664 database/database.sqlite
-                '
-            """
+                            chown -R nandita:www-data .
+                            chmod -R 775 storage bootstrap/cache database
+                            chmod 664 database/database.sqlite
+                        '
+                    """
+                }
+            }
         }
     }
 }
